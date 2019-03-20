@@ -2,4 +2,4 @@
 
 ## Task 1
 
- implement serialization in Lua
+**target:** read TAPL and view [design.perl6](https://design.perl6.org/) site
