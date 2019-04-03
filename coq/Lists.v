@@ -138,7 +138,7 @@ Proof.
   simpl.
   reflexivity.
 Qed.
-
+(** [] *)
 (** **** Exercise: 1 star, standard, optional (fst_swap_is_snd)  *)
 Theorem fst_swap_is_snd : forall (p : natprod),
   fst (swap_pair p) = snd p.
@@ -147,7 +147,7 @@ Proof.
   simpl.
   reflexivity.
 Qed.
-
+(** [] *)
 (* ################################################################# *)
 (** * Lists of Numbers *)
 
@@ -527,14 +527,27 @@ Proof. reflexivity. Qed.
 
 Theorem bag_add_count : forall n : nat , forall s : bag,
     count n (add n s) = plus 1 (count n s).
-Proof. 
-intros n.
-intros s.
-destruct s as [| h s'].
-simpl.
-assert (  (n =? n )=true ). { simpl. 
 
-Abort.
+intros n.
+Proof.
+assert (H: (n =? n) = true ). 
+       {
+          induction n as [| n' IHn].
+          + reflexivity.
+          +  simpl. rewrite -> IHn.
+              trivial.
+       }
+intros s.
+induction s as [| len s' IHs'].
+{ simpl.  
+  rewrite -> H .
+  trivial.  }
+{
+
+ 
+ 
+    
+Admitted.
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_bag_theorem : option (nat*string) := None.
@@ -928,12 +941,12 @@ Lemma nonzeros_app : forall l1 l2 : natlist,
   nonzeros (l1 ++ l2) = (nonzeros l1) ++ (nonzeros l2).
 Proof.
   intros l1 l2.
-  Search nonzeros.
   induction l1 as [| n l' IHl'].
-- reflexivity.
-- simpl.
+{ simpl. reflexivity. }
+{(* assert ( H : nonzeros ) 
+
   rewrite -> IHl'.
-  
+*)  
  Admitted.
 
 (** [] *)
@@ -974,7 +987,7 @@ Proof.
 - simpl.
   rewrite -> IHl'.
 Admitted.
-
+(** [] *)
 
 (* ================================================================= *)
 (** ** List Exercises, Part 2 *)
@@ -1090,7 +1103,7 @@ Example test_nth_error2 : nth_error [4;5;6;7] 3 = Some 7.
 Proof. reflexivity. Qed.
 Example test_nth_error3 : nth_error [4;5;6;7] 9 = None.
 Proof. reflexivity. Qed.
-
+(** [] *)
 (** (In the HTML version, the boilerplate proofs of these
     examples are elided.  Click on a box if you want to see one.)
 
@@ -1155,7 +1168,7 @@ Proof.
 - simpl. reflexivity.
 - simpl. reflexivity.
 Qed.
-
+(** [] *)
 End NatList.
 
 (* ################################################################# *)
@@ -1187,11 +1200,20 @@ Definition eqb_id (x1 x2 : id) :=
 (** **** Exercise: 1 star, standard (eqb_id_refl)  *)
 Theorem eqb_id_refl : forall x, true = eqb_id x x.
 Proof.
- intros x.
-destruct x eqn:E.
-simpl.
-Admitted.
+Search eqb_id.
+ intros x. 
+induction x as [].
+  simpl.
+  induction n as [| n' IHn'].
+  - trivial.
+  - assert (H : (n' =? n') = (S n' =? S n') ). 
+    { simpl. reflexivity. }
+    rewrite <- H.
+    rewrite <- IHn'.
+  trivial.
+Qed.
 
+(** [] *)
 (** Now we define the type of partial maps: *)
 
 Module PartialMap.
@@ -1254,8 +1276,9 @@ Proof.
   induction o  as [|n IHn'].
 - simpl.
 Qed.
-Admitted.
 *)
+Admitted.
+(** [] *)
 End PartialMap.
 
 (** **** Exercise: 2 stars, standard (baz_num_elts)  
