@@ -1250,15 +1250,15 @@ Qed.
 Theorem andb_true_elim2 : forall b c : bool,
   andb b c = true -> c = true.
 Proof.
- intros b c .
+intros b c .
  simpl.
  destruct c eqn:Ec.
-- {
+ {
   destruct b eqn:Eb.
   -  simpl. reflexivity.
   - reflexivity.
 }
--{
+{
   destruct b eqn:Eb.
   - simpl. intros H.
   rewrite -> H.
@@ -1268,12 +1268,20 @@ Proof.
   reflexivity.
 }
 Qed.
+(** [] *)
 
 (** **** Exercise: 1 star, standard (zero_nbeq_plus_1)  *)
 Theorem zero_nbeq_plus_1 : forall n : nat,
   0 =? (n + 1) = false.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros [| n].
+  {
+    reflexivity.
+  }
+  {
+    reflexivity.
+  }
+Qed.
 (** [] *)
 
 (* ================================================================= *)
@@ -1358,7 +1366,19 @@ Fixpoint plus' (n : nat) (m : nat) : nat :=
     out your solution so that it doesn't cause Coq to reject the whole
     file!) *)
 
-(* FILL IN HERE 
+(* 
+
+Fixpoint test' (x:nat) : nat :=
+  match x with
+  | 0 =>  0
+  | S _ =>  match evenb(x) with
+          | true => match x with 
+                    | S (S k') => test' k'
+                    | _ => 0
+                  end
+          | false => test' (S x)
+        end
+  end.
 
     [] *)
 
@@ -1380,8 +1400,11 @@ Theorem identity_fn_applied_twice :
   (forall (x : bool), f x = x) ->
   forall (b : bool), f (f b) = b.
 Proof.
-  (* FILL IN HERE *) Admitted.
-
+  intros f X Y.
+  rewrite -> X.
+  rewrite -> X.
+  trivial.
+Qed.
 (** [] *)
 
 (** **** Exercise: 1 star, standard (negation_fn_applied_twice)  
@@ -1390,7 +1413,18 @@ Proof.
     to the previous one but where the second hypothesis says that the
     function [f] has the property that [f x = negb x]. *)
 
-(* FILL IN HERE *)
+Theorem nengation_fn_applied_twice :
+  forall (f : bool -> bool),
+  (forall (x: bool), f x = negb x) ->
+  forall (b: bool), f(f b) =b.
+Proof.
+  intros f X Y.
+  rewrite -> X.
+  rewrite -> X.
+  rewrite -> negb_involutive.
+  trivial.
+Qed.
+
 (* The [Import] statement on the next line tells Coq to use the
    standard library String module.  We'll use strings more in later
    chapters, but for the moment we just need syntax for literal
@@ -1408,13 +1442,26 @@ Definition manual_grade_for_negation_fn_applied_twice : option (nat*string) := N
     [destruct] and [rewrite], but destructing everything in sight is
     not the best way.) *)
 
+(*
+Definition orb (b1:bool) (b2:bool) : bool :=
+  match b1 with
+  | true ⇒ true
+  | false ⇒ b2
+  end.
+
+Definition andb (b1:bool) (b2:bool) : bool :=
+  match b1 with
+  | true ⇒ b2
+  | false ⇒ false
+  end.
+*)
 Theorem andb_eq_orb :
   forall (b c : bool),
   (andb b c = orb b c) ->
   b = c.
 Proof.
-  (* FILL IN HERE *) Admitted.
-
+  
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, standard (binary)  
