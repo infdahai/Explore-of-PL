@@ -1,5 +1,5 @@
 (** * Basics: Functional Programming in Coq *)
-
+Print LoadPath.
 (* REMINDER:
 
           #####################################################
@@ -1460,7 +1460,10 @@ Theorem andb_eq_orb :
   (andb b c = orb b c) ->
   b = c.
 Proof.
-  
+  intros b c.
+ destruct b  eqn:E.
+{ simpl. intro. rewrite -> H. trivial. }
+{ simpl. intro. rewrite -> H. reflexivity. }
 Qed.
 (** [] *)
 
