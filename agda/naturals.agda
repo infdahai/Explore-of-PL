@@ -1,5 +1,5 @@
 
-module naturals where
+module agda_test.naturals where
 
 import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl)
