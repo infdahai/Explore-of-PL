@@ -298,7 +298,7 @@ Fixpoint nonzeros (l:natlist) : natlist  :=
   match l with
   | nil => []
   | 0 :: t  => nonzeros t
-  | h :: t =>  [h] ++ nonzeros t
+  | h :: t =>  h :: nonzeros t
 end.
   
 
@@ -357,10 +357,10 @@ Proof. reflexivity. Qed.
     defining a new kind of pairs, but this is not the only way.)  *)
 
 Fixpoint alternate (l1 l2 : natlist) : natlist :=
-  match l1 , l2 with
-  | h1::t1 , h2::t2 => h1::h2 :: alternate t1 t2
-  | nil , _ => l2
-  | _ , nil => l1
+  match l1, l2 with
+   | l1, nil              => l1
+   | nil, l2              => l2
+   | h1 :: t1, h2 :: t2 => h1 :: h2 :: alternate t1 t2
 end.
 
 Example test_alternate1:
@@ -397,9 +397,10 @@ Definition bag := natlist.
 Fixpoint count (v:nat) (s:bag) : nat :=
   match s with
   | nil => 0
-  | h::t => if eqb h v 
-            then plus 1 (count v t)
-            else count v t
+  | h::t => match eqb v h with   
+            | true => S (count v t)
+            | false => count v t
+          end
 end.
 
 (** All these proofs can be done just by [reflexivity]. *)
@@ -422,7 +423,7 @@ Proof. reflexivity. Qed.
     perhaps by using functions that have already been defined.  *)
 
 Definition sum : bag -> bag -> bag
-:= alternate.
+:= app.
 
 
 Example test_sum1:              count 1 (sum [1;2;3] [1;4;1]) = 3.
@@ -527,27 +528,14 @@ Proof. reflexivity. Qed.
 
 Theorem bag_add_count : forall n : nat , forall s : bag,
     count n (add n s) = plus 1 (count n s).
-
-intros n.
 Proof.
-assert (H: (n =? n) = true ). 
-       {
-          induction n as [| n' IHn].
-          + reflexivity.
-          +  simpl. rewrite -> IHn.
-              trivial.
-       }
-intros s.
-induction s as [| len s' IHs'].
-{ simpl.  
-  rewrite -> H .
-  trivial.  }
-{
+  intros. 
+  simpl.
+  Search eqb.
+  rewrite <- eqb_refl.
+  trivial.
+Qed.
 
- 
- 
-    
-Admitted.
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_bag_theorem : option (nat*string) := None.
@@ -941,13 +929,20 @@ Lemma nonzeros_app : forall l1 l2 : natlist,
   nonzeros (l1 ++ l2) = (nonzeros l1) ++ (nonzeros l2).
 Proof.
   intros l1 l2.
-  induction l1 as [| n l' IHl'].
-{ simpl. reflexivity. }
-{(* assert ( H : nonzeros ) 
-
-  rewrite -> IHl'.
-*)  
- Admitted.
+  induction l1 .
+{ reflexivity. }
+{ destruct n.
+  { simpl.
+ rewrite <- IHl1.
+  trivial. 
+  }
+ {
+  simpl.
+  rewrite <- IHl1.
+  trivial.
+ }
+}
+Qed.
 
 (** [] *)
 
@@ -982,11 +977,15 @@ Theorem eqblist_refl : forall l:natlist,
   true = eqblist l l.
 Proof.
   intros l.
-  induction l as [ | n l' IHl'].
+  induction l .
 - reflexivity.
 - simpl.
-  rewrite -> IHl'.
-Admitted.
+  Search eqb.
+  rewrite <- eqb_refl.
+  rewrite <- IHl.
+  trivial.
+Qed.
+
 (** [] *)
 
 (* ================================================================= *)
@@ -1005,6 +1004,7 @@ Qed.
 
 (** The following lemma about [leb] might help you in the next exercise. *)
 
+
 Theorem leb_n_Sn : forall n,
   n <=? (S n) = true.
 Proof.
@@ -1017,18 +1017,38 @@ Proof.
 (** Before doing the next exercise, make sure you've filled in the
    definition of [remove_one] above. *)
 (** **** Exercise: 3 stars, advanced (remove_does_not_increase_count)  *)
+(*
+Fixpoint leb (n m : nat) : bool :=
+  match n with
+  | O ⇒ true
+  | S n' ⇒
+      match m with
+      | O ⇒ false
+      | S m' ⇒ leb n' m'
+      end
+  end.
+Fixpoint remove_one (v:nat) (s:bag) : bag
+:=  match s with
+    | nil => []
+    | h::t => if eqb v h 
+              then t
+              else  [h] ++ remove_one v t
+end.
+*)
 Theorem remove_does_not_increase_count: forall (s : bag),
   (count 0 (remove_one 0 s)) <=? (count 0 s) = true.
 Proof.
-  intros s.
-  induction s as [|n l' IHl'].
-- simpl.  reflexivity.
-- simpl.
-(*
-  rewrite->leb_n_Sn.
-  rewrite -> IHl'.
-*)
-Admitted.
+  intros.
+  induction s .
+- simpl. reflexivity.
+- destruct n.
+  + simpl.
+  remember (count 0 s) as k.
+  destruct k .
+    * reflexivity.
+    * simpl. rewrite -> leb_n_Sn. trivial.
+  + simpl.  rewrite  -> IHs. reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, standard, optional (bag_count_sum)  
@@ -1036,10 +1056,57 @@ Admitted.
     Write down an interesting theorem [bag_count_sum] about bags
     involving the functions [count] and [sum], and prove it using
     Coq.  (You may find that the difficulty of the proof depends on
-    how you defined [count]!) *)
-(* FILL IN HERE 
+    how you defined [count]!) 
 
-    [] *)
+Theorem bag_count_sum : forall (n : nat) (s1 s2 :bag) ,
+  count n (sum s1 s2 ) = count n (s1) + count n (s2).
+Proof.
+  intros.
+  induction s1.
+  simpl.
+ trivial.
+ Print eqb.
+case_eq (eqb n n0).
+intuition.
+assert (K :  (n = n0) = ((n=?n0)=true)  ).
+{
+case_eq (eqb n n0) .
+- 
+}
+apply K in H. 
+*)
+
+Theorem bag_count_sum : forall n : nat, forall (s1 s2 :bag) ,
+  count n (sum s1 s2 ) = (count n s1) + (count n s2).
+Proof.
+  intros .
+  induction s1 .
+  - reflexivity.
+  - simpl.
+    destruct (eqb n n0).
+    + simpl. rewrite <- IHs1. reflexivity.
+    + rewrite <- IHs1. reflexivity.
+Qed.
+(*
+Theorem bag_count_sum : forall (n : nat) (s1 s2 :bag) ,
+  leb (count n s1 ) (count n (sum s1 s2)) = true.
+Proof.
+  intros.
+  induction s1.
+ - reflexivity.
+ - simpl. 
+  destruct (eqb n0 n ).
+  simpl.
+
+  +  
+Admitted.
+*)
+(** [] *)
+(*
+Inductive natlist : Type :=
+  | nil
+  | cons (n : nat) (l : natlist).
+*)
 
 (** **** Exercise: 4 stars, advanced (rev_injective)  
 
@@ -1049,8 +1116,24 @@ Admitted.
 
     (There is a hard way and an easy way to do this.) *)
 
-(* FILL IN HERE *)
-
+(*
+Fixpoint rev (l:natlist) : natlist :=
+  match l with
+  | nil ⇒ nil
+  | h :: t ⇒ rev t ++ [h]
+  end.
+*)
+Theorem rev_injective : forall (l1 l2 : natlist), 
+    rev l1 = rev l2 -> l1 = l2.
+Proof.
+  intros . 
+  Search rev.
+  rewrite <- rev_involutive.
+  rewrite <- H.
+  rewrite -> rev_involutive.
+  trivial.
+Qed.
+(** [] *)
 (* Do not modify the following line: *)
 Definition manual_grade_for_rev_injective : option (nat*string) := None.
 (** [] *)
@@ -1197,9 +1280,12 @@ Definition eqb_id (x1 x2 : id) :=
   | Id n1, Id n2 => n1 =? n2
   end.
 
+Search id.
+Search eqb.
 (** **** Exercise: 1 star, standard (eqb_id_refl)  *)
 Theorem eqb_id_refl : forall x, true = eqb_id x x.
 Proof.
+(*
 Search eqb_id.
  intros x. 
 induction x as [].
@@ -1211,6 +1297,13 @@ induction x as [].
     rewrite <- H.
     rewrite <- IHn'.
   trivial.
+*)
+intros .
+destruct x . 
+simpl.
+rewrite <- eqb_refl.
+trivial.
+
 Qed.
 
 (** [] *)
@@ -1269,15 +1362,11 @@ Theorem update_neq :
   forall (d : partial_map) (x y : id) (o: nat),
     eqb_id x y = false -> find x (update d y o) = find x d.
 Proof.
-  intros d x y o.
-(*
-  rewrite -> update_eq.
+  intros .
   simpl.
-  induction o  as [|n IHn'].
-- simpl.
+  rewrite -> H.
+  trivial.
 Qed.
-*)
-Admitted.
 (** [] *)
 End PartialMap.
 
@@ -1291,8 +1380,13 @@ Inductive baz : Type :=
 
 (** How _many_ elements does the type [baz] have? (Explain in words,
     in a comment.) *)
-
-(* FILL IN HERE *)
+Print baz.
+(* 
+I think it has just 0 . element
+Because if you want to get a element with a baz type , you should find a 
+element with a baz type firstly. But the beginning is not existing and 
+we can't get a baz element firstly from the existing types.
+*)
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_baz_num_elts : option (nat*string) := None.
