@@ -240,7 +240,10 @@ Theorem is_real : forall n : nat ,
     true = (n =? n).
 Proof.
   intros n .
-Admitted.
+induction n as [| n' IHn].
+- reflexivity.
+- simpl. rewrite <- IHn. trivial.
+Qed.
 
 Fixpoint double (n:nat) :=
   match n with
@@ -252,7 +255,11 @@ Fixpoint double (n:nat) :=
 
 Lemma double_plus : forall n, double n = n + n .
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros .
+  induction n.
+{ simpl. reflexivity. }
+{ simpl. rewrite <- plus_n_Sm. rewrite <- IHn. reflexivity. }
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (evenb_S)  
@@ -267,7 +274,13 @@ Proof.
 Theorem evenb_S : forall n : nat,
   evenb (S n) = negb (evenb n).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  induction n as [|n' IHn].
+{ reflexivity. }
+{ rewrite -> IHn.
+  rewrite -> negb_involutive.
+  reflexivity.
+}
+Qed.
 (** [] *)
 
 (** **** Exercise: 1 star, standard (destruct_induction)  
