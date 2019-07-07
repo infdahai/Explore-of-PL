@@ -2,6 +2,10 @@
 
 # type-driven
 
+## comment
+
+I use the binary file to execute idris program in windows 10 pro.
+ 
 ## some concepts
 
 1. reference transparency :  An expression (such as a func-
